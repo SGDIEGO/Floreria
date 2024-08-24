@@ -1,0 +1,13 @@
+.card-carrito {
+    position: relative;
+}
+
+.card-carrito__close {
+    position: absolute;
+    right: 0;
+}
+
+#carrito-main {
+    display: flex;
+    gap: 1rem;
+}
