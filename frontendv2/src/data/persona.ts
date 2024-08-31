@@ -3,6 +3,7 @@ enum Persona {
   NoRegistrar,
   Cliente_tipo,
   Florista_tipo,
+  Delivery_tipo,
 }
 
 export { Persona };

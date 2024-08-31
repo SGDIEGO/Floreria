@@ -1,4 +1,4 @@
-import { LoaderFunction, useLoaderData } from "react-router-dom";
+import { Link, LoaderFunction, useLoaderData } from "react-router-dom";
 import { CARRITO_COOKIE, COOKIE_TOKEN } from "../data/token";
 import Cookies from "js-cookie";
 import { IResponse } from "../interfaces/http";
@@ -7,6 +7,8 @@ import "./productos.css";
 import react from "react";
 import { Beneficio } from "../data/beneficio";
 import BeneficioComponente from "../components/beneficio";
+import { jwtDecode } from "jwt-decode";
+import { Persona } from "../data/persona";
 
 // Interfaces
 interface IBusqueda {
@@ -53,12 +55,13 @@ export const loader: LoaderFunction = async function ({}) {
   }
 
   // Extraer datos
-  return body.Data;
+  return body.Data ?? [];
 };
 
 export default function Beneficios() {
   // Productos cargados
   const beneficios = useLoaderData() as Beneficio[];
+  const usuario = jwtDecode(Cookies.get(COOKIE_TOKEN)!) as any;
 
   // Usestates para la busqueda
   const [busqueda, actualizar_busqueda] = react.useState("");
@@ -69,6 +72,7 @@ export default function Beneficios() {
     if (busqueda == "")
       return beneficios.map((beneficio) => (
         <BeneficioComponente
+          key={beneficio.Id}
           Id={beneficio.Id}
           Nombre={beneficio.Nombre}
           Descripcion={beneficio.Descripcion}
@@ -86,6 +90,7 @@ export default function Beneficios() {
           .filter((ben) => ben.Id == Number(b.valor))
           .map((beneficio) => (
             <BeneficioComponente
+              key={beneficio.Id}
               Id={beneficio.Id}
               Nombre={beneficio.Nombre}
               Descripcion={beneficio.Descripcion}
@@ -101,6 +106,7 @@ export default function Beneficios() {
           .filter((ben) => ben.Nombre.includes(b.valor))
           .map((beneficio) => (
             <BeneficioComponente
+              key={beneficio.Id}
               Id={beneficio.Id}
               Nombre={beneficio.Nombre}
               Descripcion={beneficio.Descripcion}
@@ -116,6 +122,7 @@ export default function Beneficios() {
           .filter((ben) => ben.Descripcion.includes(b.valor))
           .map((beneficio) => (
             <BeneficioComponente
+              key={beneficio.Id}
               Id={beneficio.Id}
               Nombre={beneficio.Nombre}
               Descripcion={beneficio.Descripcion}
@@ -129,6 +136,7 @@ export default function Beneficios() {
       default:
         return beneficios.map((beneficio) => (
           <BeneficioComponente
+            key={beneficio.Id}
             Id={beneficio.Id}
             Nombre={beneficio.Nombre}
             Descripcion={beneficio.Descripcion}
@@ -174,6 +182,12 @@ export default function Beneficios() {
           <option value="nombre">Nombre</option>
           <option value="descripcion">Descripcion</option>
         </select>
+        {}
+        {usuario.aud == Persona.Florista_tipo ? (
+          <Link to={"crear"} className="btn btn-success">
+            Crear Beneficio
+          </Link>
+        ) : null}
       </div>
       <div className="d-flex flex-wrap w-auto gap-3 mt-3">
         <FiltrarBeneficios key={categoria} valor={busqueda} />

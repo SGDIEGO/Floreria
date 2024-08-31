@@ -9,6 +9,7 @@ import Cliente from "../components/cliente";
 import Florista from "../components/florista";
 
 import "./usuario.css";
+import { useState } from "react";
 
 // Loader para la carga de pagina
 export const loader: LoaderFunction = async function ({
@@ -35,6 +36,7 @@ export const loader: LoaderFunction = async function ({
 export default function Usuario() {
   // Extraer datos
   const { tipo } = useLoaderData() as { tipo: number };
+  const [colapse, actualizar_colapse] = useState(false);
 
   // Renderizar segun tipo de usuario
   function SeleccionarTipoUsuario(t: number) {
@@ -59,13 +61,11 @@ export default function Usuario() {
     alert("Sesion cerrada con exito");
   }
 
-  return (
-    <>
-      <header>
-        <nav
-          id="sidebarMenu"
-          className="collapse d-lg-block sidebar collapse bg-white"
-        >
+  // Menu
+  function MostrarMenu() {
+    if (colapse) {
+      return (
+        <nav className="d-lg-block sidebar bg-white">
           <div className="position-sticky">
             <div className="list-group list-group-flush mx-3 mt-4">
               <Link
@@ -101,6 +101,67 @@ export default function Usuario() {
                 </Link>
               ) : null}
               {tipo == Persona.Florista_tipo ? (
+                <>
+                  <Link
+                    to={"pedidos/pendientes"}
+                    className="list-group-item list-group-item-action py-2 ripple"
+                  >
+                    <i className="fas fa-chart-area fa-fw me-3"></i>
+                    <span>Pedidos pendientes</span>
+                  </Link>
+                  <Link
+                    to={"registros"}
+                    className="list-group-item list-group-item-action py-2 ripple"
+                  >
+                    <i className="fas fa-chart-area fa-fw me-3"></i>
+                    <span>Registros</span>
+                  </Link>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </nav>
+      );
+    }
+
+    return (
+      <nav className="collapse d-lg-block sidebar collapse bg-white">
+        <div className="position-sticky">
+          <div className="list-group list-group-flush mx-3 mt-4">
+            <Link
+              to={""}
+              className="list-group-item list-group-item-action py-2 ripple"
+              aria-current="true"
+            >
+              <i className="fas fa-tachometer-alt fa-fw me-3"></i>
+              <span>Principal</span>
+            </Link>
+            <Link
+              to={"productos"}
+              // active
+              className="list-group-item list-group-item-action py-2 ripple"
+            >
+              <i className="fas fa-chart-area fa-fw me-3"></i>
+              <span>Productos</span>
+            </Link>
+            <Link
+              to={"beneficios"}
+              className="list-group-item list-group-item-action py-2 ripple"
+            >
+              <i className="fas fa-chart-area fa-fw me-3"></i>
+              <span>Beneficios</span>
+            </Link>
+            {tipo == Persona.Cliente_tipo ? (
+              <Link
+                to={"carrito"}
+                className="list-group-item list-group-item-action py-2 ripple"
+              >
+                <i className="fas fa-chart-area fa-fw me-3"></i>
+                <span>Carrito</span>
+              </Link>
+            ) : null}
+            {tipo == Persona.Florista_tipo ? (
+              <>
                 <Link
                   to={"pedidos/pendientes"}
                   className="list-group-item list-group-item-action py-2 ripple"
@@ -108,17 +169,40 @@ export default function Usuario() {
                   <i className="fas fa-chart-area fa-fw me-3"></i>
                   <span>Pedidos pendientes</span>
                 </Link>
-              ) : null}
-            </div>
+                <Link
+                  to={"registros"}
+                  className="list-group-item list-group-item-action py-2 ripple"
+                >
+                  <i className="fas fa-chart-area fa-fw me-3"></i>
+                  <span>Registros</span>
+                </Link>
+              </>
+            ) : null}
           </div>
-        </nav>
+        </div>
+      </nav>
+    );
+  }
 
+  return (
+    <>
+      <header>
+        {MostrarMenu()}
         <nav
           id="main-navbar"
           className="navbar navbar-expand-lg navbar-light bg-white fixed-top"
         >
           <div className="container-fluid">
             <button
+              onClick={() => {
+                {
+                  if (colapse == true) {
+                    actualizar_colapse(false);
+                  } else {
+                    actualizar_colapse(true);
+                  }
+                }
+              }}
               data-mdb-button-init
               className="navbar-toggler"
               type="button"

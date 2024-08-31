@@ -1,14 +1,28 @@
 import { ActionFunction, Form, Link, redirect } from "react-router-dom";
 import { Persona } from "../data/persona";
+import { RegistrarPersona } from "../models/persona";
+import { IResponse } from "../interfaces/http";
 
 // Accion para formulario
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
+  const dataBody = data as any as RegistrarPersona;
+  // Datos nulos
+  if (
+    dataBody.Nombres == "" ||
+    dataBody.Apellidos == "" ||
+    dataBody.Correo == "" ||
+    dataBody.Contraseña == "" ||
+    dataBody.Contraseña.length < 8
+  ) {
+    alert("Ingreso de datos invalido");
+    return null;
+  }
 
   // Contraseña diferentes
   if (data.Contraseña != data.Confirmacion_Contraseña) {
-    alert("Ingreso de datos invalido");
+    alert("Contraseñas no coinciden");
     return null;
   }
 
@@ -26,6 +40,17 @@ export const action: ActionFunction = async ({ request }) => {
     throw new Response(e, { status: 500 });
   });
 
+  // Extraer response
+  const body = (await res.json()) as any as IResponse;
+
+  // Error del servidor
+  if (body.Error != "") {
+    alert("Error de registro");
+    return null;
+  }
+
+  console.log(body);
+
   // Si hay errores
   if (!res.ok) {
     throw new Response((res.body as any).Error, {
@@ -35,6 +60,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   // Redirigir a la url: "/usuario/:id"
   alert("Registro exitoso");
+  return null;
   return redirect(`/`);
 };
 

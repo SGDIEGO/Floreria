@@ -50,7 +50,7 @@ export const loader: LoaderFunction = async function () {
     });
   }
 
-  return [body.Data, body2.Data];
+  return [body.Data ?? [], body2.Data ?? []];
 };
 
 export default function Home() {

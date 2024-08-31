@@ -8,11 +8,14 @@ import { NotificacionTipo } from "../data/notificacion";
 import { jwtDecode } from "jwt-decode";
 import { Token } from "../interfaces/token";
 import { Persona } from "../data/persona";
+import { HOST } from "../data/http";
+import { IResponse } from "../interfaces/http";
 
 export default function ProductoComponente(producto: Producto) {
   // Usestate para notificacion
   const [tipoNotificacion, actualizar_tipoNotificacion] = useState(-1);
   const [mensajeNotificacion, actualizar_mensajeNotificacion] = useState("");
+  const [data, actualizar_data] = useState(producto);
   const tipo = jwtDecode(Cookies.get(COOKIE_TOKEN)!) as Token;
 
   // Funcion para agregar producto a carrito
@@ -28,6 +31,7 @@ export default function ProductoComponente(producto: Producto) {
         Id: id,
         Cantidad: 0,
         Precio: producto.Precio,
+        Puntos: producto.Puntos,
       });
 
       Cookies.set(CARRITO_COOKIE, JSON.stringify(carritoInfo));
@@ -43,7 +47,44 @@ export default function ProductoComponente(producto: Producto) {
   }
 
   // Funcion para modificar producto
-  function ModificarProducto(id: number) {}
+  function ModificarProducto(id: number) {
+    console.log(data, id);
+
+    (async () => {
+      try {
+        const res = await fetch(HOST + "/elemento/" + id + "/modificar", {
+          method: "PUT",
+          headers: {
+            Authorization: "Bearer " + Cookies.get(COOKIE_TOKEN),
+          },
+          body: JSON.stringify({
+            Precio: Number(data.Precio),
+            Puntos: Number(data.Puntos),
+            Stock: Number(data.Stock),
+          }),
+        });
+
+        const body = (await res.json()) as any as IResponse;
+        if (body.Error != "") {
+          throw new Error(body.Error);
+        }
+
+        alert("Elemento modificado");
+      } catch (error: any) {
+        alert(error);
+        throw new Error(error);
+      }
+    })();
+  }
+
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+
+    actualizar_data((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   return (
     <>
@@ -59,9 +100,48 @@ export default function ProductoComponente(producto: Producto) {
           <p className="card-text">{producto.Descripcion}</p>
         </div>
         <ul className="list-group list-group-light list-group-small">
-          <li className="list-group-item px-4">Precio: {producto.Precio}</li>
-          <li className="list-group-item px-4">Puntos: {producto.Puntos}</li>
-          <li className="list-group-item px-4">Stock: {producto.Stock}</li>
+          <li className="list-group-item px-4">
+            Precio:
+            {tipo.aud == Persona.Cliente_tipo ? (
+              <p>{data.Precio}</p>
+            ) : (
+              <input
+                type="number"
+                name="Precio"
+                id=""
+                value={data.Precio}
+                onChange={handleChange}
+              />
+            )}
+          </li>
+          <li className="list-group-item px-4">
+            Puntos:
+            {tipo.aud == Persona.Cliente_tipo ? (
+              <p>{data.Puntos}</p>
+            ) : (
+              <input
+                type="number"
+                name="Puntos"
+                id=""
+                value={data.Puntos}
+                onChange={handleChange}
+              />
+            )}
+          </li>
+          <li className="list-group-item px-4">
+            Stock:
+            {tipo.aud == Persona.Cliente_tipo ? (
+              <p>{data.Stock}</p>
+            ) : (
+              <input
+                type="number"
+                name="Stock"
+                id=""
+                value={data.Stock}
+                onChange={handleChange}
+              />
+            )}
+          </li>
         </ul>
         <div className="card-body">
           {tipo.aud == Persona.Cliente_tipo && producto.Stock > 0 ? (

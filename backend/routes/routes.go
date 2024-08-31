@@ -14,7 +14,9 @@ type IRoute interface {
 func InitRoutes(server *http.ServeMux, db *sql.DB) {
 	personaRt := NewClientRt("/persona", db)
 	elementoRt := NewElementoRt("/elemento", db)
+	pedidoRt := NewPedidoRt("/pedido", db)
 
 	personaRt.load(server)
 	elementoRt.load(server)
+	pedidoRt.load(server)
 }

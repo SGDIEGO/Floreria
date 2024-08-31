@@ -6,7 +6,9 @@ type ElementoDto struct {
 	Descripcion string
 	Stock       int
 	Precio      float64
+	Puntos      int
 	Imagen      string
+	Tipo        int
 }
 
 type ProductoDto struct {
@@ -32,4 +34,10 @@ type BeneficioDto struct {
 
 type ComprarElementoDto struct {
 	Stock int
+}
+
+type ModificarElemento struct {
+	Precio float32
+	Puntos int
+	Stock  int
 }

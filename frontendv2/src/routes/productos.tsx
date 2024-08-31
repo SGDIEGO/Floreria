@@ -1,4 +1,4 @@
-import { LoaderFunction, useLoaderData } from "react-router-dom";
+import { Link, LoaderFunction, useLoaderData } from "react-router-dom";
 import { CARRITO_COOKIE, COOKIE_TOKEN } from "../data/token";
 import Cookies from "js-cookie";
 import { Producto } from "../data/producto";
@@ -6,6 +6,8 @@ import { IResponse } from "../interfaces/http";
 
 import ProductoComponente from "../components/producto";
 import { useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { Persona } from "../data/persona";
 
 // Interfaces
 interface IBusqueda {
@@ -52,12 +54,13 @@ export const loader: LoaderFunction = async function ({}) {
   }
 
   // Extraer datos
-  return body.Data;
+  return body.Data ?? [];
 };
 
 export default function Productos() {
   // Productos cargados
   const productos = useLoaderData() as Producto[];
+  const usuario = jwtDecode(Cookies.get(COOKIE_TOKEN)!) as any;
 
   // Usestates para la busqueda
   const [busqueda, actualizar_busqueda] = useState("");
@@ -148,7 +151,7 @@ export default function Productos() {
   // Renderizar productos
   return (
     <div className="w-100">
-      <div className="d-flex w-50">
+      <div className="d-flex w-50 gap-3">
         <form className="d-none d-md-flex input-group w-auto my-auto">
           <input
             autoComplete="off"
@@ -178,6 +181,11 @@ export default function Productos() {
           <option value="nombre">Nombre</option>
           <option value="descripcion">Descripcion</option>
         </select>
+        {usuario.aud == Persona.Florista_tipo ? (
+          <Link to={"crear"} className="btn btn-success">
+            Crear Producto
+          </Link>
+        ) : null}
       </div>
       <div className="d-flex flex-wrap w-auto gap-3 mt-3">
         <FiltrarProductos key={categoria} valor={busqueda} />

@@ -11,7 +11,6 @@ import { COOKIE_TOKEN } from "../data/token";
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
-  console.log("data: ", data);
 
   // Fetch
   const res = await fetch("http://localhost:3000/persona/login", {
@@ -21,9 +20,9 @@ export const action: ActionFunction = async ({ request }) => {
     throw new Response(e, { status: 500 });
   });
 
+  
   // Si hay errores
   if (!res.ok) {
-    console.log("e: ", res);
     throw new Response((res.body as any).Error, {
       status: res.status,
     });

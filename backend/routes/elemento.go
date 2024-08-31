@@ -33,4 +33,10 @@ func (c *ElementoRt) load(server *http.ServeMux) {
 
 	server.HandleFunc("GET "+c.path+"/{id}", middlewares.AuthMiddleware(c.handlers.GetElementoById))
 	server.HandleFunc("PUT "+c.path+"/{id}", middlewares.AuthMiddleware(c.handlers.ComprarElemento))
+
+	server.HandleFunc("PUT "+c.path+"/{id}/modificar", middlewares.AuthMiddleware(c.handlers.ModificarElemento))
+	server.HandleFunc("POST "+c.path+"/producto", middlewares.AuthMiddleware(c.handlers.PostProducto))
+	server.HandleFunc("POST "+c.path+"/beneficio", middlewares.AuthMiddleware(c.handlers.PostBeneficio))
+
+	server.HandleFunc("GET "+c.path+"/categorias", c.handlers.GetCategorias)
 }

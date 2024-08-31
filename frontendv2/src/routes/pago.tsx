@@ -12,8 +12,13 @@ import { CompraDto, ProductoCarrito } from "../data/producto";
 import { useState } from "react";
 import { HOST } from "../data/http";
 import { IResponse } from "../interfaces/http";
+import { boleta } from "../utils/generadorPDF";
+import { jwtDecode } from "jwt-decode";
+
+const MP = ["tarjeta", "yape", "otros"];
 
 interface IPago {
+  Puntos_total: number;
   Monto: number;
   Id_cliente: number;
 }
@@ -34,6 +39,13 @@ export default function Pago() {
   const [metodos_pago, actualizar_metodos_pago] = useState(3);
 
   function RealizarCompra() {
+    const info = jwtDecode(Cookies.get(COOKIE_TOKEN)!) as any
+    const direccion = info.sub.Direccion 
+    if (direccion as string == "") {
+      alert("Necesita asignar direccion")
+      return
+    }
+    
     const compra = JSON.parse(
       Cookies.get(COMPRA_COOKIE)!
     ) as any as IPago | null;
@@ -44,8 +56,6 @@ export default function Pago() {
 
     const dataPedido: CompraDto = {
       Monto: compra?.Monto!,
-      Fecha_entrega: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 3),
-      Fecha_emision: new Date(),
       Id_cliente: compra?.Id_cliente!,
       Id_medio_pago: metodos_pago,
       Id_florista: -1,
@@ -67,7 +77,6 @@ export default function Pago() {
       .then((res) => res.json())
       .then((body) => {
         const data = body as IResponse;
-        console.log(body);
 
         if (data.Error != "") {
           throw new Error(data.Error);
@@ -82,6 +91,10 @@ export default function Pago() {
       });
 
     Cookies.remove(COMPRA_COOKIE);
+
+    console.log(metodos_pago);
+    
+    boleta(MP[metodos_pago-1], JSON.stringify(elementos), String(compra?.Monto!));
   }
 
   function CancelarCompra() {
@@ -119,7 +132,7 @@ export default function Pago() {
                     <sup className="dollar font-weight-bold text-muted">S/</sup>
                     <span className="h2 mx-1 mb-0">{datos.Monto}</span>
                     <span className="text-muted font-weight-bold mt-2">
-                      / year
+                      / {datos.Puntos_total} puntos
                     </span>
                   </div>
                 </div>

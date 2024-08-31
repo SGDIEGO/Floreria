@@ -4,9 +4,10 @@ import { jwtDecode } from "jwt-decode";
 import { Token } from "../interfaces/token";
 import { COOKIE_TOKEN } from "../data/token";
 import { Persona } from "../data/persona";
-import { ClienteDto, FloristaDto } from "../models/persona";
+import { ActualizarPersona, ClienteDto, FloristaDto } from "../models/persona";
 import { IResponse } from "../interfaces/http";
 import { HOST } from "../data/http";
+import { useState } from "react";
 
 interface Pedido {
   Id: number;
@@ -39,9 +40,33 @@ export const loader: LoaderFunction = async function ({}) {
 
   // Verificar si es cliente o florista
   if (tokenDecodificado.aud == Persona.Florista_tipo) {
+    // Ultimas compras registradas
+    const response = await fetch(
+      HOST + "/persona/florista/" + tokenDecodificado.sub.Id + "/pedidos/registrados",
+      {
+        headers: {
+          Authorization: "Bearer " + Cookies.get(COOKIE_TOKEN),
+        },
+      }
+    )
+      .then((res) => res.json())
+      .catch((e) => {
+        throw new Response(e);
+      });
+
+    const body = response as IResponse;
+
+    if (body.Error != "") {
+      throw new Response(body.Error);
+    }
+
+    const pedidos: Pedido[] = body.Data ?? [];
+
+    // Retornar
     return {
       tipo: tokenDecodificado.aud,
       datos: tokenDecodificado.sub,
+      ultimasCompras: pedidos,
     };
   }
 
@@ -65,7 +90,7 @@ export const loader: LoaderFunction = async function ({}) {
     throw new Response(body.Error);
   }
 
-  const pedidos: Pedido[] = body.Data;
+  const pedidos: Pedido[] = body.Data ?? [];
 
   return {
     tipo: tokenDecodificado.aud,
@@ -76,6 +101,53 @@ export const loader: LoaderFunction = async function ({}) {
 
 export default function Info() {
   const informacionUsuario = useLoaderData() as IDatosUsuario;
+
+  const [usuario, actualizar_usuario] = useState(informacionUsuario.datos);
+
+  // Al cambiar un valor del usuario
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+
+    actualizar_usuario((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Click de boton para actualizar datos
+  const handleUpdateClick = async () => {
+    const data: ActualizarPersona = {
+      Nombres: usuario.Nombres,
+      Apellidos: usuario.Apellidos,
+      Correo: usuario.Correo,
+      Direccion: usuario.Direccion,
+      Telefono: usuario.Telefono,
+    };
+
+    // Fetch
+    const res = await fetch(
+      HOST + "/persona/usuario/" + informacionUsuario.datos.Id,
+      {
+        method: "PUT",
+        headers: {
+          "Content-type": "application/json",
+          Authorization: "Bearer " + Cookies.get(COOKIE_TOKEN),
+        },
+        body: JSON.stringify(data),
+      }
+    ).catch((e) => {
+      throw new Response(e, { status: 401 });
+    });
+
+    // Extraer response
+    const body = (await res.json()) as any as IResponse;
+    if (body.Error != "") {
+      throw new Response(body.Error);
+    }
+
+    // Datos actualizados
+    alert("Datos actualizados");
+  };
 
   return (
     <>
@@ -108,13 +180,34 @@ export default function Info() {
                 <div className="card-body">
                   <div className="row">
                     <div className="col-sm-3">
-                      <p className="mb-0">Nombre Completo</p>
+                      <p className="mb-0">Nombres</p>
                     </div>
                     <div className="col-sm-9">
                       <p className="text-muted mb-0">
-                        {informacionUsuario.datos.Nombres +
-                          " " +
-                          informacionUsuario.datos.Apellidos}
+                        <input
+                          className="w-100"
+                          type="text"
+                          name="Nombres"
+                          value={usuario.Nombres}
+                          onChange={handleChange}
+                        />
+                      </p>
+                    </div>
+                  </div>
+                  <hr />
+                  <div className="row">
+                    <div className="col-sm-3">
+                      <p className="mb-0">Apellidos</p>
+                    </div>
+                    <div className="col-sm-9">
+                      <p className="text-muted mb-0">
+                        <input
+                          className="w-100"
+                          type="text"
+                          name="Apellidos"
+                          value={usuario.Apellidos}
+                          onChange={handleChange}
+                        />
                       </p>
                     </div>
                   </div>
@@ -125,19 +218,30 @@ export default function Info() {
                     </div>
                     <div className="col-sm-9">
                       <p className="text-muted mb-0">
-                        {informacionUsuario.datos.Correo}
+                        <input
+                          className="w-100"
+                          type="text"
+                          name="Correo"
+                          value={usuario.Correo}
+                          onChange={handleChange}
+                        />
                       </p>
                     </div>
                   </div>
-
                   <hr />
                   <div className="row">
                     <div className="col-sm-3">
-                      <p className="mb-0">Celular</p>
+                      <p className="mb-0">Telefono</p>
                     </div>
                     <div className="col-sm-9">
                       <p className="text-muted mb-0">
-                        {informacionUsuario.datos.Telefono}
+                        <input
+                          className="w-100"
+                          type="text"
+                          name="Telefono"
+                          value={usuario.Telefono}
+                          onChange={handleChange}
+                        />
                       </p>
                     </div>
                   </div>
@@ -148,7 +252,13 @@ export default function Info() {
                     </div>
                     <div className="col-sm-9">
                       <p className="text-muted mb-0">
-                        {informacionUsuario.datos.Direccion}
+                        <input
+                          className="w-100"
+                          type="text"
+                          name="Direccion"
+                          value={usuario.Direccion}
+                          onChange={handleChange}
+                        />
                       </p>
                     </div>
                   </div>
@@ -167,14 +277,94 @@ export default function Info() {
                       </div>
                     </>
                   ) : null}
+                  <hr />
+                  <div className="row">
+                    <button
+                      className="btn btn-secondary w-50"
+                      onClick={handleUpdateClick}
+                    >
+                      Actualizar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          {informacionUsuario.tipo != Persona.Florista_tipo ? (
+          {informacionUsuario.tipo == Persona.Cliente_tipo ? (
             <>
               {" "}
               <h5>ULTIMAS COMPRAS</h5>
+              <div className="row">
+                {informacionUsuario.ultimasCompras.map((pedido) => (
+                  <div className="col-md-4">
+                    <div className="card mb-4 mb-md-0">
+                      <div className="card-body">
+                        <p className="mb-4">Id de pedido: {pedido.Id}</p>
+                        <p className="mb-1" style={{ fontSize: ".77rem" }}>
+                          Monto: {pedido.Monto}
+                        </p>
+                        <div
+                          className="progress rounded"
+                          style={{ height: "5px" }}
+                        >
+                          <div
+                            className="progress-bar"
+                            role="progressbar"
+                            style={{ width: "0%" }}
+                            aria-valuenow={80}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                          ></div>
+                        </div>
+                        <p className="mb-1" style={{ fontSize: ".77rem" }}>
+                          Emitido: {pedido.Fecha_emision.toString()}
+                        </p>
+                        <div
+                          className="progress rounded"
+                          style={{ height: "5px" }}
+                        >
+                          <div
+                            className="progress-bar"
+                            role="progressbar"
+                            style={{ width: "0%" }}
+                            aria-valuenow={80}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                          ></div>
+                        </div>
+                        <p className="mb-1" style={{ fontSize: ".77rem" }}>
+                          Entrega estimada: {pedido.Fecha_entrega.toString()}
+                        </p>
+                        <div
+                          className="progress rounded"
+                          style={{ height: "5px" }}
+                        >
+                          <div
+                            className="progress-bar"
+                            role="progressbar"
+                            style={{ width: "0%" }}
+                            aria-valuenow={80}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                          ></div>
+                        </div>
+                        <Link to={"pedidos/" + pedido.Id}>
+                          <button className="btn btn-outline-info btn-rounded">
+                            Detalles
+                          </button>
+                        </Link>
+                      </div>
+                      <div></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+          {informacionUsuario.tipo == Persona.Florista_tipo ? (
+            <>
+              {" "}
+              <h5>COMPRAS REGISTRADAS</h5>
               <div className="row">
                 {informacionUsuario.ultimasCompras.map((pedido) => (
                   <div className="col-md-4">

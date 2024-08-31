@@ -28,6 +28,18 @@ import { appCtxProvider } from "./contexts/appContext";
 import Pago, { loader as pagoloader } from "./routes/pago";
 import Pedido, { loader as PedidoLoader } from "./routes/pedido";
 import Pedidos, { loader as PedidosLoader } from "./routes/pedidos";
+import Pedido_Detalle, {
+  loader as pedido_detalleLoader,
+  action as PedidosAction,
+} from "./routes/pedidos_detalle";
+import Producto_Crear, {
+  action as productoAction,
+  loader as productocrearLoader,
+} from "./routes/producto_crear";
+import Beneficio_Crear, {
+  action as BeneficioCrearAction,
+} from "./routes/beneficio_crear";
+import Registros, { action as RegistrosAction } from "./routes/registros";
 
 const router = createBrowserRouter([
   {
@@ -62,35 +74,61 @@ const router = createBrowserRouter([
       {
         path: "",
         index: true,
-        element: <Info />,
+        element: [<AuthMiddleware />, <Info />],
         loader: infoloader,
       },
       {
         path: "productos",
-        element: <Productos />,
+        element: [<AuthMiddleware />, <Productos />],
         loader: usuarioproductosloader,
       },
-      { path: "beneficios", element: <Beneficios />, loader: beneficiosloader },
+      {
+        path: "productos/crear",
+        element: [<AuthMiddleware />, <Producto_Crear />],
+        loader: productocrearLoader,
+        action: productoAction,
+      },
+      {
+        path: "beneficios",
+        element: [<AuthMiddleware />, <Beneficios />],
+        loader: beneficiosloader,
+      },
+      {
+        path: "beneficios/crear",
+        element: [<AuthMiddleware />, <Beneficio_Crear />],
+        action: BeneficioCrearAction,
+      },
       {
         path: "carrito",
-        element: <Carrito />,
+        element: [<AuthMiddleware />, <Carrito />],
         loader: carritoloader,
         action: carritoAction,
       },
       {
         path: "pago",
-        element: <Pago />,
+        element: [<AuthMiddleware />, <Pago />],
         loader: pagoloader,
       },
       {
         path: "pedidos/:idpedido",
-        element: <Pedido />,
+        element: [<AuthMiddleware />, <Pedido />],
         loader: PedidoLoader,
       },
       {
         path: "pedidos/pendientes",
-        element: <Pedidos />,
+        element: [<AuthMiddleware />, <Pedidos />],
         loader: PedidosLoader,
+      },
+      {
+        path: "pedidos/pendientes/:idpedido",
+        element: [<AuthMiddleware />, <Pedido_Detalle />],
+        loader: pedido_detalleLoader,
+        action: PedidosAction,
+      },
+      {
+        path: "registros",
+        element: [<AuthMiddleware />, <Registros />],
+        action: RegistrosAction,
       },
     ],
   },

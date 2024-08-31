@@ -21,7 +21,7 @@ func verifyToken(tokenString string) error {
 	}
 
 	if !token.Valid {
-		return fmt.Errorf("invalid token")
+		return fmt.Errorf("token invalido")
 	}
 
 	return nil
@@ -46,7 +46,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		err := verifyToken(tokenString)
 		if err != nil {
 			util.JsonResponse(w, http.StatusUnauthorized, util.Response{
-				Error: "token invalido",
+				Error: err.Error(),
 			})
 			return
 		}

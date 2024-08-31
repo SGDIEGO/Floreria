@@ -1,8 +1,8 @@
 interface Token {
-  aud: number;
+  aud: number; // Tipo persona
   exp: number;
   iat: number;
-  sub: any;
+  sub: any; // Datos
 }
 
 export type { Token };

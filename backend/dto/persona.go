@@ -9,13 +9,14 @@ type LoginPersona struct {
 }
 
 type RegistrarPersona struct {
-	Dni         string `json:"Dni"`
-	Direccion   string `json:"Direccion"`
 	Nombres     string `json:"Nombres"`
 	Apellidos   string `json:"Apellidos"`
-	Telefono    string `json:"Telefono"`
 	Correo      string `json:"Correo"`
 	Contraseña  string `json:"Contraseña"`
+	Dni         string `json:"Dni"`
+	Direccion   string `json:"Direccion"`
+	Telefono    string `json:"Telefono"`
+	Placa       *string
 	TipoPersona int
 }
 
@@ -63,4 +64,12 @@ type CompraDto struct {
 	Id_medio_pago int
 	Id_florista   int
 	Elementos     []CompraElementoDto
+}
+
+type ActualizarPersona struct {
+	Nombres   string
+	Apellidos string
+	Correo    string
+	Telefono  string
+	Direccion string
 }

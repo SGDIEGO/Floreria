@@ -10,14 +10,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@pdfme/common": "^4.3.2",
+    "@pdfme/generator": "^4.3.2",
+    "@pdfme/ui": "^4.3.2",
+    "@react-pdf/renderer": "^3.4.4",
     "@types/js-cookie": "^3.0.6",
     "@types/jwt-decode": "^3.1.0",
+    "@types/react-pdf": "^6.2.0",
+    "date-fns": "^3.6.0",
     "frontendv2": "file:",
+    "i": "^0.3.7",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
+    "npm": "^10.8.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.0"
+    "react-router-dom": "^6.26.0",
+    "remove": "^0.1.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

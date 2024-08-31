@@ -2,12 +2,22 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/SGDIEGO/Floreria/routes"
-	"github.com/go-sql-driver/mysql"
+	// _"github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	"github.com/rs/cors"
+)
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "diegoasg04"
+	dbname   = "Floreria"
 )
 
 func main() {
@@ -15,13 +25,15 @@ func main() {
 	server := http.NewServeMux()
 
 	// Cargar base de datos
-	config := mysql.Config{
-		User:   "root",
-		Passwd: "diegoasg04",
-		DBName: "floreria",
-		Addr:   "127.0.0.1:3306",
-	}
-	db, err := sql.Open("mysql", config.FormatDSN())
+	// config := mysql.Config{
+	// 	User:   "root",
+	// 	Passwd: "diegoasg04",
+	// 	DBName: "floreria",
+	// 	Addr:   "127.0.0.1:3306",
+	// }
+	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname))
 
 	if err != nil {
 		log.Fatal(err.Error())

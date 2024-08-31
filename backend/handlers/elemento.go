@@ -146,7 +146,6 @@ func (h *ElementoHandlers) GetBeneficioById(w http.ResponseWriter, r *http.Reque
 func (h *ElementoHandlers) ComprarElemento(w http.ResponseWriter, r *http.Request) {
 	// Valor de id
 	id, err := strconv.Atoi(r.PathValue("id"))
-
 	if err != nil {
 		util.JsonResponse(w, http.StatusBadRequest, util.Response{
 			Data:  nil,
@@ -174,6 +173,113 @@ func (h *ElementoHandlers) ComprarElemento(w http.ResponseWriter, r *http.Reques
 
 	// Actualizado
 	util.JsonResponse(w, http.StatusOK, util.Response{
+		Error: "",
+	})
+}
+
+func (h *ElementoHandlers) ModificarElemento(w http.ResponseWriter, r *http.Request) {
+	// Extraer el id del elemento
+	// Valor de id
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		util.JsonResponse(w, http.StatusBadRequest, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	// Extraer el body
+	var body dto.ModificarElemento
+	// Error
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		util.JsonResponse(w, http.StatusBadRequest, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	// Modificar elemento
+	err = h.elementoService.ModificarElemento(id, &body)
+	if err != nil {
+		util.JsonResponse(w, http.StatusInternalServerError, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	// Actualizado
+	util.JsonResponse(w, http.StatusOK, util.Response{
+		Error: "",
+	})
+}
+
+func (h *ElementoHandlers) PostProducto(w http.ResponseWriter, r *http.Request) {
+	// Extraer el body
+	var body dto.CrearProducto
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		util.JsonResponse(w, http.StatusBadRequest, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	err := h.elementoService.CrearProducto(&body)
+	if err != nil {
+		util.JsonResponse(w, http.StatusInternalServerError, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	util.JsonResponse(w, http.StatusOK, util.Response{
+		Data:  nil,
+		Error: "",
+	})
+}
+
+func (h *ElementoHandlers) PostBeneficio(w http.ResponseWriter, r *http.Request) {
+	// Extraer el body
+	var body dto.CrearBeneficio
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		util.JsonResponse(w, http.StatusBadRequest, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	err := h.elementoService.CrearBeneficio(&body)
+	if err != nil {
+		util.JsonResponse(w, http.StatusBadRequest, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	util.JsonResponse(w, http.StatusOK, util.Response{
+		Data:  nil,
+		Error: "",
+	})
+}
+
+func (h *ElementoHandlers) GetCategorias(w http.ResponseWriter, r *http.Request) {
+	categorias, err := h.elementoService.GetCategorias()
+	if err != nil {
+		util.JsonResponse(w, http.StatusInternalServerError, util.Response{
+			Data:  nil,
+			Error: err.Error(),
+		})
+		return
+	}
+
+	util.JsonResponse(w, http.StatusOK, util.Response{
+		Data:  categorias,
 		Error: "",
 	})
 }

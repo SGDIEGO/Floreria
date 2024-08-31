@@ -11,6 +11,8 @@ import Cookies from "js-cookie";
 import { CARRITO_COOKIE, COMPRA_COOKIE, COOKIE_TOKEN } from "../data/token";
 import {
   ComprarElementoDto,
+  ELEMENTO,
+  ElementoDto,
   Producto,
   ProductoCarrito,
 } from "../data/producto";
@@ -22,6 +24,9 @@ import "./carrito.css";
 import Notificacion from "../components/notificacion";
 import { NotificacionTipo } from "../data/notificacion";
 import React from "react";
+import { jwtDecode } from "jwt-decode";
+import { Token } from "../interfaces/token";
+import { Persona } from "../data/persona";
 
 // Loader
 export const loader: LoaderFunction = async function ({}) {
@@ -54,16 +59,33 @@ export const loader: LoaderFunction = async function ({}) {
       }
 
       // Extraer data
-      const data = body.Data as Producto;
+      const data = body.Data as ElementoDto;
 
       return data;
     })
   );
 
-  return productosLista;
+  // Informacion de usuario
+  const tokenString = Cookies.get(COOKIE_TOKEN);
+  if (tokenString == undefined) {
+    throw new Response("Aun no se ha logueado", { status: 401 });
+  }
+
+  // Decodificar token
+  const tokenDecodificado = jwtDecode<Token>(tokenString);
+  if (Date.now() >= tokenDecodificado.exp * 1000) {
+    throw new Response("Token Expiro", { status: 401 });
+  }
+
+  return {
+    tipo: tokenDecodificado.aud,
+    datos: tokenDecodificado.sub,
+    productosLista,
+  };
 };
 
 interface IPago {
+  Puntos_total: number;
   Monto: number;
   Id_cliente: number;
 }
@@ -75,9 +97,10 @@ export const action: ActionFunction = async ({ params }) => {
   ) as any as ProductoCarrito[];
 
   let monto = 0;
-
+  let puntos = 0;
   for (const elemento of elementos) {
     monto += elemento.Cantidad * elemento.Precio;
+    puntos += elemento.Puntos * elemento.Cantidad;
   }
 
   // Validar monto
@@ -87,6 +110,7 @@ export const action: ActionFunction = async ({ params }) => {
 
   // Informacion de pago
   const informacion: IPago = {
+    Puntos_total: puntos,
     Monto: monto,
     Id_cliente: Number(params.id),
   };
@@ -99,9 +123,19 @@ export const action: ActionFunction = async ({ params }) => {
 
 // Componente
 export default function Carrito() {
+  const loaderData: {
+    tipo: number;
+    datos: any;
+    productosLista: any;
+  } = useLoaderData() as any;
+
   // Productos
   let [productosLista, actualizar_productosLista] = useState(
-    useLoaderData() as Producto[]
+    loaderData.productosLista as ElementoDto[]
+  );
+
+  const [puntos_usuario, actualizar_puntos_usuario] = useState<number>(
+    loaderData.datos.Puntos ?? 0
   );
 
   let productosCarrito = productosLista.map((prod) => {
@@ -109,6 +143,8 @@ export default function Carrito() {
       Id: prod.Id,
       Cantidad: 0,
       Precio: prod.Precio,
+      Puntos: prod.Puntos,
+      Tipo: prod.Tipo,
     };
   });
 
@@ -179,13 +215,31 @@ export default function Carrito() {
   }
 
   // Evento para actualizar cantidad de producto
-  function ActualizarProductoCantidad(id: number, cantidad: number) {
+  function ActualizarProductoCantidad(
+    e: any,
+    id: number,
+    cantidad: number,
+    tipo: number
+  ) {
     // Encontrar el indice del elemento a actualizar el valor
     let index = productosCarrito.findIndex((prod) => prod.Id == id);
 
     // No fue encontrado
     if (index == -1) {
       return;
+    }
+
+    // Tipo
+    if (tipo == ELEMENTO.BENEFICIO_TIPO) {
+      // Valor
+      const value =
+        loaderData.datos.Puntos - cantidad * productosCarrito[index].Puntos;
+
+      if (value < 0) {
+        e.target.value -= 1;
+        return;
+      }
+      actualizar_puntos_usuario(value);
     }
 
     // Actualizar
@@ -196,7 +250,7 @@ export default function Carrito() {
   }
 
   // Renderizar el producto
-  function ProductoCarrito(producto: Producto) {
+  function ProductoCarrito(producto: ElementoDto) {
     return (
       <div
         key={producto.Id}
@@ -212,7 +266,7 @@ export default function Carrito() {
         <img
           src={producto.Imagen}
           className="card-img-top"
-          alt="Chicago Skyscrapers"
+          alt={producto.Imagen}
         />
         <div className="card-body">
           <h5 className="card-title">{producto.Nombre}</h5>
@@ -222,6 +276,7 @@ export default function Carrito() {
           <li className="list-group-item px-4">Precio: {producto.Precio}</li>
           <li className="list-group-item px-4">Puntos: {producto.Puntos}</li>
           <li className="list-group-item px-4">Stock: {producto.Stock}</li>
+          <li className="list-group-item px-4">Tipo: {producto.Tipo}</li>
         </ul>
         <div className="card-body">
           <div
@@ -236,9 +291,15 @@ export default function Carrito() {
               min={0}
               max={100}
               onChange={(e) =>
-                ActualizarProductoCantidad(producto.Id, Number(e.target.value))
+                ActualizarProductoCantidad(
+                  e,
+                  producto.Id,
+                  Number(e.target.value),
+                  producto.Tipo
+                )
               }
             />
+
             <label className="form-label" style={{ background: "white" }}>
               Cantidad
             </label>
@@ -254,7 +315,7 @@ export default function Carrito() {
         {productosLista.map((producto) => ProductoCarrito(producto))}
       </div>
       <div>
-        <Form method="post">
+        <Form className="d-flex gap-3" method="post">
           <button
             type="submit"
             className="btn btn-success btn-rounded"
@@ -262,6 +323,7 @@ export default function Carrito() {
           >
             Comprar
           </button>
+          <p>Puntos: {puntos_usuario}</p>
         </Form>
       </div>
       {tipoNotificacion != -1 ? (
